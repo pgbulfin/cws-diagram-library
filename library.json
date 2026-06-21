@@ -12,8 +12,8 @@
       "file": "parts/well_head.png",
       "label": "Well Head",
       "mount": "base",
-      "w": 165,
-      "h": 47
+      "w": 385,
+      "h": 119
     },
     {
       "id": "pressure_tank",
@@ -22,8 +22,8 @@
       "file": "parts/pressure_tank.png",
       "label": "Pressure Tank",
       "mount": "base",
-      "w": 236,
-      "h": 331
+      "w": 248,
+      "h": 343
     },
     {
       "id": "contact_tank",
@@ -32,18 +32,8 @@
       "file": "parts/contact_tank.png",
       "label": "Contact Tank",
       "mount": "base",
-      "w": 354,
-      "h": 519
-    },
-    {
-      "id": "filter_tank",
-      "name": "Filter / Softener",
-      "category": "tank",
-      "file": "parts/filter_tank.png",
-      "label": "Filter / Softener",
-      "mount": "base",
-      "w": 276,
-      "h": 593
+      "w": 514,
+      "h": 725
     },
     {
       "id": "solution_tank",
@@ -52,8 +42,8 @@
       "file": "parts/solution_tank.png",
       "label": "Solution Tank",
       "mount": "base",
-      "w": 135,
-      "h": 219
+      "w": 147,
+      "h": 231
     },
     {
       "id": "metering_pump",
@@ -62,8 +52,8 @@
       "file": "parts/metering_pump.png",
       "label": "Metering Pump",
       "mount": "riser",
-      "w": 79,
-      "h": 159
+      "w": 278,
+      "h": 334
     },
     {
       "id": "pressure_gauge",
@@ -72,8 +62,8 @@
       "file": "parts/pressure_gauge.png",
       "label": "Pressure Gauge",
       "mount": "base",
-      "w": 59,
-      "h": 106
+      "w": 193,
+      "h": 335
     },
     {
       "id": "pressure_switch",
@@ -82,8 +72,8 @@
       "file": "parts/pressure_switch.png",
       "label": "Pressure Switch",
       "mount": "base",
-      "w": 55,
-      "h": 87
+      "w": 187,
+      "h": 282
     },
     {
       "id": "gate_valve",
@@ -92,8 +82,8 @@
       "file": "parts/gate_valve.png",
       "label": "Gate Valve",
       "mount": "base",
-      "w": 52,
-      "h": 81
+      "w": 171,
+      "h": 260
     },
     {
       "id": "check_valve",
@@ -102,8 +92,8 @@
       "file": "parts/check_valve.png",
       "label": "Check Valve",
       "mount": "base",
-      "w": 52,
-      "h": 46
+      "w": 222,
+      "h": 198
     },
     {
       "id": "vacuum_breaker",
@@ -112,8 +102,8 @@
       "file": "parts/vacuum_breaker.png",
       "label": "Vacuum Breaker",
       "mount": "base",
-      "w": 52,
-      "h": 47
+      "w": 64,
+      "h": 59
     },
     {
       "id": "hose_bib",
@@ -122,8 +112,128 @@
       "file": "parts/hose_bib.png",
       "label": "Hose Bib",
       "mount": "base",
-      "w": 85,
-      "h": 98
+      "w": 259,
+      "h": 299
+    },
+    {
+      "id": "spindown_filter",
+      "name": "Spindown Filter",
+      "category": "tank",
+      "file": "parts/spindown_filter.png",
+      "label": "Spindown Filter",
+      "mount": "base",
+      "w": 66,
+      "h": 178
+    },
+    {
+      "id": "female_plug",
+      "name": "Female Plug",
+      "category": "fitting",
+      "file": "parts/female_plug.png",
+      "label": "Female Plug",
+      "mount": "base",
+      "w": 127,
+      "h": 200
+    },
+    {
+      "id": "static_mixer",
+      "name": "Static Mixer",
+      "category": "fitting",
+      "file": "parts/static_mixer.png",
+      "label": "Static Mixer",
+      "mount": "base",
+      "w": 236,
+      "h": 45
+    },
+    {
+      "id": "water_softener",
+      "name": "Water Softener",
+      "category": "tank",
+      "file": "parts/water_softener.png",
+      "label": "Water Softener",
+      "mount": "base",
+      "w": 458,
+      "h": 609
+    },
+    {
+      "id": "neutralizer_filter",
+      "name": "Neutralizer Filter",
+      "category": "tank",
+      "file": "parts/neutralizer_filter.png",
+      "label": "Neutralizer Filter",
+      "mount": "base",
+      "w": 331,
+      "h": 484
+    },
+    {
+      "id": "uv_sterilizer",
+      "name": "UV Sterilizer",
+      "category": "fitting",
+      "file": "parts/uv_sterilizer.png",
+      "label": "UV Sterilizer",
+      "mount": "base",
+      "w": 718,
+      "h": 168
+    },
+    {
+      "id": "carbon_filter",
+      "name": "Carbon Filter",
+      "category": "tank",
+      "file": "parts/carbon_filter.png",
+      "label": "Carbon Filter",
+      "mount": "base",
+      "w": 324,
+      "h": 605
+    },
+    {
+      "id": "greensand_filter",
+      "name": "Greensand Filter",
+      "category": "tank",
+      "file": "parts/greensand_filter.png",
+      "label": "Greensand Filter",
+      "mount": "base",
+      "w": 406,
+      "h": 603
+    },
+    {
+      "id": "iron_filter",
+      "name": "Iron Filter",
+      "category": "tank",
+      "file": "parts/iron_filter.png",
+      "label": "Iron Filter",
+      "mount": "base",
+      "w": 248,
+      "h": 609
+    },
+    {
+      "id": "booster_pump",
+      "name": "Booster Pump",
+      "category": "equipment",
+      "file": "parts/booster_pump.png",
+      "label": "Booster Pump",
+      "mount": "base",
+      "w": 58,
+      "h": 39
+    },
+    {
+      "id": "micron_filter",
+      "name": "Micron Filter",
+      "category": "tank",
+      "file": "parts/micron_filter.png",
+      "label": "Micron Filter",
+      "mount": "base",
+      "w": 78,
+      "h": 121
+    },
+    {
+      "id": "pressure_relief_valve",
+      "name": "Pressure Relief Valve",
+      "category": "fitting",
+      "file": "parts/pressure_relief_valve.png",
+      "label": "Pressure Relief Valve",
+      "mount": "base",
+      "w": 48,
+      "h": 64
     }
   ]
 }
