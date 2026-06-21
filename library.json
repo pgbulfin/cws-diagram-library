@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "diagram": {
+    "pipeBaseline": 250,
+    "tankTargetHeight": 210
+  },
+  "parts": [
+    {
+      "id": "well_head",
+      "name": "Well Head",
+      "category": "source",
+      "file": "parts/well_head.png",
+      "label": "Well Head",
+      "mount": "base",
+      "w": 165,
+      "h": 47
+    },
+    {
+      "id": "pressure_tank",
+      "name": "Pressure Tank",
+      "category": "tank",
+      "file": "parts/pressure_tank.png",
+      "label": "Pressure Tank",
+      "mount": "base",
+      "w": 236,
+      "h": 331
+    },
+    {
+      "id": "contact_tank",
+      "name": "Contact Tank",
+      "category": "tank",
+      "file": "parts/contact_tank.png",
+      "label": "Contact Tank",
+      "mount": "base",
+      "w": 354,
+      "h": 519
+    },
+    {
+      "id": "filter_tank",
+      "name": "Filter / Softener",
+      "category": "tank",
+      "file": "parts/filter_tank.png",
+      "label": "Filter / Softener",
+      "mount": "base",
+      "w": 276,
+      "h": 593
+    },
+    {
+      "id": "solution_tank",
+      "name": "Solution Tank",
+      "category": "tank",
+      "file": "parts/solution_tank.png",
+      "label": "Solution Tank",
+      "mount": "base",
+      "w": 135,
+      "h": 219
+    },
+    {
+      "id": "metering_pump",
+      "name": "Metering Pump",
+      "category": "equipment",
+      "file": "parts/metering_pump.png",
+      "label": "Metering Pump",
+      "mount": "riser",
+      "w": 79,
+      "h": 159
+    },
+    {
+      "id": "pressure_gauge",
+      "name": "Pressure Gauge",
+      "category": "fitting",
+      "file": "parts/pressure_gauge.png",
+      "label": "Pressure Gauge",
+      "mount": "base",
+      "w": 59,
+      "h": 106
+    },
+    {
+      "id": "pressure_switch",
+      "name": "Pressure Switch",
+      "category": "fitting",
+      "file": "parts/pressure_switch.png",
+      "label": "Pressure Switch",
+      "mount": "base",
+      "w": 55,
+      "h": 87
+    },
+    {
+      "id": "gate_valve",
+      "name": "Gate Valve",
+      "category": "fitting",
+      "file": "parts/gate_valve.png",
+      "label": "Gate Valve",
+      "mount": "base",
+      "w": 52,
+      "h": 81
+    },
+    {
+      "id": "check_valve",
+      "name": "Check Valve",
+      "category": "fitting",
+      "file": "parts/check_valve.png",
+      "label": "Check Valve",
+      "mount": "base",
+      "w": 52,
+      "h": 46
+    },
+    {
+      "id": "vacuum_breaker",
+      "name": "Vacuum Breaker",
+      "category": "fitting",
+      "file": "parts/vacuum_breaker.png",
+      "label": "Vacuum Breaker",
+      "mount": "base",
+      "w": 52,
+      "h": 47
+    },
+    {
+      "id": "hose_bib",
+      "name": "Hose Bib",
+      "category": "fitting",
+      "file": "parts/hose_bib.png",
+      "label": "Hose Bib",
+      "mount": "base",
+      "w": 85,
+      "h": 98
+    }
+  ]
+}
