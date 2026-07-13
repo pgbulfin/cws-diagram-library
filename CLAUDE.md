@@ -36,6 +36,43 @@ If doing it directly instead of via the script:
   or `riser` (floats above with a feed line: e.g. metering pump). Default `base`.
 - `w`/`h` — the PNG's real pixel size. Required: all parts share one scale factor,
   so correct `w`/`h` keeps relative sizes true. Read them from the saved image.
+- `ports` — connection points for auto-routing piping (see below). Added by
+  `add_ports.py`, not by hand.
+
+## Ports (connection points for auto-routing)
+Each part has a `ports` object so the builder can auto-route pipe between parts.
+A port is a point in the part's OWN pixel coordinates (`0,0` = top-left of the
+PNG, measured against that part's `w`/`h`) plus a `dir` = which way the pipe
+leaves the port (`"left"` | `"right"` | `"up"` | `"down"`). All coords are ints.
+
+```json
+"ports": {
+  "inlet":  {"x": 0,   "y": 609, "dir": "down"},
+  "outlet": {"x": 248, "y": 609, "dir": "down"},
+  "drain":  {"x": 124, "y": 609, "dir": "down"}
+}
+```
+Port names: `inlet`, `outlet`, and (backwashing filters/softeners only) `drain`.
+Sources have only `outlet`; risers have only `outlet`.
+
+Conventions, derived from each part's `w`/`h` (precedence top to bottom):
+- `source` (well_head) — `outlet` = (w/2, h/2) `left`.
+- `mount:"riser"` (e.g. metering_pump) — `outlet` = (w/2, h) `down`. Wins over the
+  category rule below (a riser feeds down through one line).
+- `tank` / `equipment` (tap the pipe at the base) — `inlet` = (0, h) `down`,
+  `outlet` = (w, h) `down`. Backwashing filters/softeners (`iron_filter`,
+  `greensand_filter`, `neutralizer_filter`, `carbon_filter`, `water_softener`,
+  `spindown_filter`) also get `drain` = (w/2, h) `down`.
+- `fitting` (inline on the pipe: valves, gauges, check valve) — `inlet` = (0, h/2)
+  `left`, `outlet` = (w, h/2) `right`.
+
+Regenerate after adding parts:
+```
+python3 add_ports.py            # only adds ports to parts missing them
+python3 add_ports.py --dry-run  # preview, write nothing
+```
+The backwashing set is an explicit id list in the script (not derivable from
+category/mount) — add new backwashing filter ids there.
 
 ## Harvesting parts in bulk (from many diagram PSDs)
 To pull parts out of a large folder of diagram PSDs:

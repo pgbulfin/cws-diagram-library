@@ -13,7 +13,14 @@
       "label": "Well Head",
       "mount": "base",
       "w": 385,
-      "h": 119
+      "h": 119,
+      "ports": {
+        "outlet": {
+          "x": 192,
+          "y": 60,
+          "dir": "left"
+        }
+      }
     },
     {
       "id": "pressure_tank",
@@ -23,7 +30,19 @@
       "label": "Pressure Tank",
       "mount": "base",
       "w": 248,
-      "h": 343
+      "h": 343,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 343,
+          "dir": "down"
+        },
+        "outlet": {
+          "x": 248,
+          "y": 343,
+          "dir": "down"
+        }
+      }
     },
     {
       "id": "contact_tank",
@@ -33,7 +52,19 @@
       "label": "Contact Tank",
       "mount": "base",
       "w": 514,
-      "h": 725
+      "h": 725,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 725,
+          "dir": "down"
+        },
+        "outlet": {
+          "x": 514,
+          "y": 725,
+          "dir": "down"
+        }
+      }
     },
     {
       "id": "solution_tank",
@@ -43,7 +74,19 @@
       "label": "Solution Tank",
       "mount": "base",
       "w": 147,
-      "h": 231
+      "h": 231,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 231,
+          "dir": "down"
+        },
+        "outlet": {
+          "x": 147,
+          "y": 231,
+          "dir": "down"
+        }
+      }
     },
     {
       "id": "metering_pump",
@@ -53,7 +96,14 @@
       "label": "Metering Pump",
       "mount": "riser",
       "w": 278,
-      "h": 334
+      "h": 334,
+      "ports": {
+        "outlet": {
+          "x": 139,
+          "y": 334,
+          "dir": "down"
+        }
+      }
     },
     {
       "id": "pressure_gauge",
@@ -63,7 +113,19 @@
       "label": "Pressure Gauge",
       "mount": "base",
       "w": 193,
-      "h": 335
+      "h": 335,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 168,
+          "dir": "left"
+        },
+        "outlet": {
+          "x": 193,
+          "y": 168,
+          "dir": "right"
+        }
+      }
     },
     {
       "id": "pressure_switch",
@@ -73,7 +135,19 @@
       "label": "Pressure Switch",
       "mount": "base",
       "w": 187,
-      "h": 282
+      "h": 282,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 141,
+          "dir": "left"
+        },
+        "outlet": {
+          "x": 187,
+          "y": 141,
+          "dir": "right"
+        }
+      }
     },
     {
       "id": "gate_valve",
@@ -83,7 +157,19 @@
       "label": "Gate Valve",
       "mount": "base",
       "w": 171,
-      "h": 260
+      "h": 260,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 130,
+          "dir": "left"
+        },
+        "outlet": {
+          "x": 171,
+          "y": 130,
+          "dir": "right"
+        }
+      }
     },
     {
       "id": "check_valve",
@@ -93,7 +179,19 @@
       "label": "Check Valve",
       "mount": "base",
       "w": 222,
-      "h": 198
+      "h": 198,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 99,
+          "dir": "left"
+        },
+        "outlet": {
+          "x": 222,
+          "y": 99,
+          "dir": "right"
+        }
+      }
     },
     {
       "id": "vacuum_breaker",
@@ -103,7 +201,19 @@
       "label": "Vacuum Breaker",
       "mount": "base",
       "w": 64,
-      "h": 59
+      "h": 59,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 30,
+          "dir": "left"
+        },
+        "outlet": {
+          "x": 64,
+          "y": 30,
+          "dir": "right"
+        }
+      }
     },
     {
       "id": "hose_bib",
@@ -113,7 +223,19 @@
       "label": "Hose Bib",
       "mount": "base",
       "w": 259,
-      "h": 299
+      "h": 299,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 150,
+          "dir": "left"
+        },
+        "outlet": {
+          "x": 259,
+          "y": 150,
+          "dir": "right"
+        }
+      }
     },
     {
       "id": "spindown_filter",
@@ -123,7 +245,24 @@
       "label": "Spindown Filter",
       "mount": "base",
       "w": 66,
-      "h": 178
+      "h": 178,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 178,
+          "dir": "down"
+        },
+        "outlet": {
+          "x": 66,
+          "y": 178,
+          "dir": "down"
+        },
+        "drain": {
+          "x": 33,
+          "y": 178,
+          "dir": "down"
+        }
+      }
     },
     {
       "id": "female_plug",
@@ -133,7 +272,19 @@
       "label": "Female Plug",
       "mount": "base",
       "w": 127,
-      "h": 200
+      "h": 200,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 100,
+          "dir": "left"
+        },
+        "outlet": {
+          "x": 127,
+          "y": 100,
+          "dir": "right"
+        }
+      }
     },
     {
       "id": "static_mixer",
@@ -143,7 +294,19 @@
       "label": "Static Mixer",
       "mount": "base",
       "w": 236,
-      "h": 45
+      "h": 45,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 22,
+          "dir": "left"
+        },
+        "outlet": {
+          "x": 236,
+          "y": 22,
+          "dir": "right"
+        }
+      }
     },
     {
       "id": "water_softener",
@@ -153,7 +316,24 @@
       "label": "Water Softener",
       "mount": "base",
       "w": 458,
-      "h": 609
+      "h": 609,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 609,
+          "dir": "down"
+        },
+        "outlet": {
+          "x": 458,
+          "y": 609,
+          "dir": "down"
+        },
+        "drain": {
+          "x": 229,
+          "y": 609,
+          "dir": "down"
+        }
+      }
     },
     {
       "id": "neutralizer_filter",
@@ -163,7 +343,24 @@
       "label": "Neutralizer Filter",
       "mount": "base",
       "w": 331,
-      "h": 484
+      "h": 484,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 484,
+          "dir": "down"
+        },
+        "outlet": {
+          "x": 331,
+          "y": 484,
+          "dir": "down"
+        },
+        "drain": {
+          "x": 166,
+          "y": 484,
+          "dir": "down"
+        }
+      }
     },
     {
       "id": "uv_sterilizer",
@@ -173,7 +370,19 @@
       "label": "UV Sterilizer",
       "mount": "base",
       "w": 718,
-      "h": 168
+      "h": 168,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 84,
+          "dir": "left"
+        },
+        "outlet": {
+          "x": 718,
+          "y": 84,
+          "dir": "right"
+        }
+      }
     },
     {
       "id": "carbon_filter",
@@ -183,7 +392,24 @@
       "label": "Carbon Filter",
       "mount": "base",
       "w": 324,
-      "h": 605
+      "h": 605,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 605,
+          "dir": "down"
+        },
+        "outlet": {
+          "x": 324,
+          "y": 605,
+          "dir": "down"
+        },
+        "drain": {
+          "x": 162,
+          "y": 605,
+          "dir": "down"
+        }
+      }
     },
     {
       "id": "greensand_filter",
@@ -193,7 +419,24 @@
       "label": "Greensand Filter",
       "mount": "base",
       "w": 406,
-      "h": 603
+      "h": 603,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 603,
+          "dir": "down"
+        },
+        "outlet": {
+          "x": 406,
+          "y": 603,
+          "dir": "down"
+        },
+        "drain": {
+          "x": 203,
+          "y": 603,
+          "dir": "down"
+        }
+      }
     },
     {
       "id": "iron_filter",
@@ -203,7 +446,24 @@
       "label": "Iron Filter",
       "mount": "base",
       "w": 248,
-      "h": 609
+      "h": 609,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 609,
+          "dir": "down"
+        },
+        "outlet": {
+          "x": 248,
+          "y": 609,
+          "dir": "down"
+        },
+        "drain": {
+          "x": 124,
+          "y": 609,
+          "dir": "down"
+        }
+      }
     },
     {
       "id": "booster_pump",
@@ -213,7 +473,19 @@
       "label": "Booster Pump",
       "mount": "base",
       "w": 58,
-      "h": 39
+      "h": 39,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 39,
+          "dir": "down"
+        },
+        "outlet": {
+          "x": 58,
+          "y": 39,
+          "dir": "down"
+        }
+      }
     },
     {
       "id": "micron_filter",
@@ -223,7 +495,19 @@
       "label": "Micron Filter",
       "mount": "base",
       "w": 78,
-      "h": 121
+      "h": 121,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 121,
+          "dir": "down"
+        },
+        "outlet": {
+          "x": 78,
+          "y": 121,
+          "dir": "down"
+        }
+      }
     },
     {
       "id": "pressure_relief_valve",
@@ -233,7 +517,19 @@
       "label": "Pressure Relief Valve",
       "mount": "base",
       "w": 48,
-      "h": 64
+      "h": 64,
+      "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 32,
+          "dir": "left"
+        },
+        "outlet": {
+          "x": 48,
+          "y": 32,
+          "dir": "right"
+        }
+      }
     }
   ]
 }
