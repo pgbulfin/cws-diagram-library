@@ -16,9 +16,10 @@
       "h": 119,
       "ports": {
         "outlet": {
-          "x": 192,
-          "y": 60,
-          "dir": "left"
+          "x": 190,
+          "y": 54,
+          "dir": "up",
+          "tap": "inline"
         }
       }
     },
@@ -32,15 +33,11 @@
       "w": 248,
       "h": 343,
       "ports": {
-        "inlet": {
-          "x": 0,
-          "y": 343,
-          "dir": "down"
-        },
         "outlet": {
-          "x": 248,
-          "y": 343,
-          "dir": "down"
+          "x": 126,
+          "y": 274,
+          "dir": "down",
+          "tap": "tee"
         }
       }
     },
@@ -55,14 +52,16 @@
       "h": 725,
       "ports": {
         "inlet": {
-          "x": 0,
-          "y": 725,
-          "dir": "down"
+          "x": 392,
+          "y": 569,
+          "dir": "down",
+          "tap": "inline"
         },
         "outlet": {
-          "x": 514,
-          "y": 725,
-          "dir": "down"
+          "x": 251,
+          "y": 9,
+          "dir": "down",
+          "tap": "inline"
         }
       }
     },
@@ -76,15 +75,11 @@
       "w": 147,
       "h": 231,
       "ports": {
-        "inlet": {
-          "x": 0,
-          "y": 231,
-          "dir": "down"
-        },
         "outlet": {
-          "x": 147,
-          "y": 231,
-          "dir": "down"
+          "x": 74,
+          "y": 5,
+          "dir": "down",
+          "tap": "inline"
         }
       }
     },
@@ -98,10 +93,17 @@
       "w": 278,
       "h": 334,
       "ports": {
+        "inlet": {
+          "x": 0,
+          "y": 197,
+          "dir": "down",
+          "tap": "inline"
+        },
         "outlet": {
           "x": 139,
           "y": 334,
-          "dir": "down"
+          "dir": "down",
+          "tap": "inline"
         }
       }
     },
@@ -116,14 +118,16 @@
       "h": 335,
       "ports": {
         "inlet": {
-          "x": 0,
-          "y": 168,
-          "dir": "left"
+          "x": 178,
+          "y": 279,
+          "dir": "left",
+          "tap": "inline"
         },
         "outlet": {
-          "x": 193,
-          "y": 168,
-          "dir": "right"
+          "x": 19,
+          "y": 282,
+          "dir": "left",
+          "tap": "inline"
         }
       }
     },
@@ -138,14 +142,16 @@
       "h": 282,
       "ports": {
         "inlet": {
-          "x": 0,
-          "y": 141,
-          "dir": "left"
+          "x": 169,
+          "y": 224,
+          "dir": "left",
+          "tap": "inline"
         },
         "outlet": {
-          "x": 187,
-          "y": 141,
-          "dir": "right"
+          "x": 6,
+          "y": 229,
+          "dir": "left",
+          "tap": "inline"
         }
       }
     },
@@ -160,14 +166,16 @@
       "h": 260,
       "ports": {
         "inlet": {
-          "x": 0,
-          "y": 130,
-          "dir": "left"
+          "x": 165,
+          "y": 206,
+          "dir": "left",
+          "tap": "inline"
         },
         "outlet": {
-          "x": 171,
-          "y": 130,
-          "dir": "right"
+          "x": 7,
+          "y": 206,
+          "dir": "left",
+          "tap": "inline"
         }
       }
     },
@@ -182,14 +190,16 @@
       "h": 198,
       "ports": {
         "inlet": {
-          "x": 0,
-          "y": 99,
-          "dir": "left"
+          "x": 213,
+          "y": 126,
+          "dir": "left",
+          "tap": "inline"
         },
         "outlet": {
-          "x": 222,
-          "y": 99,
-          "dir": "right"
+          "x": 9,
+          "y": 127,
+          "dir": "left",
+          "tap": "inline"
         }
       }
     },
@@ -204,14 +214,16 @@
       "h": 59,
       "ports": {
         "inlet": {
-          "x": 0,
-          "y": 30,
-          "dir": "left"
+          "x": 58,
+          "y": 36,
+          "dir": "left",
+          "tap": "inline"
         },
         "outlet": {
-          "x": 64,
-          "y": 30,
-          "dir": "right"
+          "x": 6,
+          "y": 37,
+          "dir": "left",
+          "tap": "inline"
         }
       }
     },
@@ -228,12 +240,14 @@
         "inlet": {
           "x": 0,
           "y": 150,
-          "dir": "left"
+          "dir": "left",
+          "tap": "inline"
         },
         "outlet": {
           "x": 259,
           "y": 150,
-          "dir": "right"
+          "dir": "left",
+          "tap": "inline"
         }
       }
     },
@@ -248,19 +262,22 @@
       "h": 178,
       "ports": {
         "inlet": {
-          "x": 0,
-          "y": 178,
-          "dir": "down"
+          "x": 60,
+          "y": 24,
+          "dir": "left",
+          "tap": "inline"
         },
         "outlet": {
-          "x": 66,
-          "y": 178,
-          "dir": "down"
+          "x": 6,
+          "y": 23,
+          "dir": "left",
+          "tap": "inline"
         },
         "drain": {
           "x": 33,
-          "y": 178,
-          "dir": "down"
+          "y": 171,
+          "dir": "down",
+          "tap": "inline"
         }
       }
     },
@@ -275,14 +292,10 @@
       "h": 200,
       "ports": {
         "inlet": {
-          "x": 0,
-          "y": 100,
-          "dir": "left"
-        },
-        "outlet": {
-          "x": 127,
-          "y": 100,
-          "dir": "right"
+          "x": 124,
+          "y": 93,
+          "dir": "left",
+          "tap": "inline"
         }
       }
     },
@@ -297,14 +310,16 @@
       "h": 45,
       "ports": {
         "inlet": {
-          "x": 0,
+          "x": 230,
           "y": 22,
-          "dir": "left"
+          "dir": "left",
+          "tap": "inline"
         },
         "outlet": {
-          "x": 236,
-          "y": 22,
-          "dir": "right"
+          "x": 6,
+          "y": 21,
+          "dir": "left",
+          "tap": "inline"
         }
       }
     },
@@ -319,19 +334,22 @@
       "h": 609,
       "ports": {
         "inlet": {
-          "x": 0,
-          "y": 609,
-          "dir": "down"
+          "x": 406,
+          "y": 31,
+          "dir": "left",
+          "tap": "inline"
         },
         "outlet": {
-          "x": 458,
-          "y": 609,
-          "dir": "down"
+          "x": 277,
+          "y": 35,
+          "dir": "left",
+          "tap": "inline"
         },
         "drain": {
-          "x": 229,
-          "y": 609,
-          "dir": "down"
+          "x": 432,
+          "y": 301,
+          "dir": "down",
+          "tap": "inline"
         }
       }
     },
@@ -346,19 +364,22 @@
       "h": 484,
       "ports": {
         "inlet": {
-          "x": 0,
-          "y": 484,
-          "dir": "down"
+          "x": 281,
+          "y": 34,
+          "dir": "left",
+          "tap": "inline"
         },
         "outlet": {
-          "x": 331,
-          "y": 484,
-          "dir": "down"
+          "x": 183,
+          "y": 35,
+          "dir": "left",
+          "tap": "inline"
         },
         "drain": {
-          "x": 166,
-          "y": 484,
-          "dir": "down"
+          "x": 311,
+          "y": 235,
+          "dir": "down",
+          "tap": "inline"
         }
       }
     },
@@ -373,14 +394,16 @@
       "h": 168,
       "ports": {
         "inlet": {
-          "x": 0,
-          "y": 84,
-          "dir": "left"
+          "x": 614,
+          "y": 5,
+          "dir": "left",
+          "tap": "inline"
         },
         "outlet": {
-          "x": 718,
-          "y": 84,
-          "dir": "right"
+          "x": 104,
+          "y": 7,
+          "dir": "left",
+          "tap": "inline"
         }
       }
     },
@@ -395,19 +418,22 @@
       "h": 605,
       "ports": {
         "inlet": {
-          "x": 0,
-          "y": 605,
-          "dir": "down"
+          "x": 268,
+          "y": 44,
+          "dir": "left",
+          "tap": "inline"
         },
         "outlet": {
-          "x": 324,
-          "y": 605,
-          "dir": "down"
+          "x": 142,
+          "y": 37,
+          "dir": "left",
+          "tap": "inline"
         },
         "drain": {
-          "x": 162,
-          "y": 605,
-          "dir": "down"
+          "x": 24,
+          "y": 212,
+          "dir": "down",
+          "tap": "inline"
         }
       }
     },
@@ -422,19 +448,22 @@
       "h": 603,
       "ports": {
         "inlet": {
-          "x": 0,
-          "y": 603,
-          "dir": "down"
+          "x": 352,
+          "y": 42,
+          "dir": "left",
+          "tap": "inline"
         },
         "outlet": {
-          "x": 406,
-          "y": 603,
-          "dir": "down"
+          "x": 229,
+          "y": 39,
+          "dir": "left",
+          "tap": "inline"
         },
         "drain": {
-          "x": 203,
-          "y": 603,
-          "dir": "down"
+          "x": 346,
+          "y": 78,
+          "dir": "down",
+          "tap": "inline"
         }
       }
     },
@@ -449,19 +478,22 @@
       "h": 609,
       "ports": {
         "inlet": {
-          "x": 0,
-          "y": 609,
-          "dir": "down"
+          "x": 192,
+          "y": 39,
+          "dir": "left",
+          "tap": "inline"
         },
         "outlet": {
-          "x": 248,
-          "y": 609,
-          "dir": "down"
+          "x": 67,
+          "y": 41,
+          "dir": "down",
+          "tap": "inline"
         },
         "drain": {
-          "x": 124,
-          "y": 609,
-          "dir": "down"
+          "x": 226,
+          "y": 300,
+          "dir": "down",
+          "tap": "inline"
         }
       }
     },
@@ -476,14 +508,16 @@
       "h": 39,
       "ports": {
         "inlet": {
-          "x": 0,
-          "y": 39,
-          "dir": "down"
+          "x": 52,
+          "y": 20,
+          "dir": "left",
+          "tap": "inline"
         },
         "outlet": {
-          "x": 58,
-          "y": 39,
-          "dir": "down"
+          "x": 40,
+          "y": 11,
+          "dir": "up",
+          "tap": "inline"
         }
       }
     },
@@ -498,14 +532,16 @@
       "h": 121,
       "ports": {
         "inlet": {
-          "x": 0,
-          "y": 121,
-          "dir": "down"
+          "x": 70,
+          "y": 18,
+          "dir": "left",
+          "tap": "inline"
         },
         "outlet": {
-          "x": 78,
-          "y": 121,
-          "dir": "down"
+          "x": 7,
+          "y": 18,
+          "dir": "left",
+          "tap": "inline"
         }
       }
     },
@@ -520,14 +556,16 @@
       "h": 64,
       "ports": {
         "inlet": {
-          "x": 0,
-          "y": 32,
-          "dir": "left"
+          "x": 31,
+          "y": 58,
+          "dir": "up",
+          "tap": "inline"
         },
         "outlet": {
-          "x": 48,
-          "y": 32,
-          "dir": "right"
+          "x": 5,
+          "y": 33,
+          "dir": "left",
+          "tap": "inline"
         }
       }
     }
