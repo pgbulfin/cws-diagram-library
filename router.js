@@ -3,49 +3,53 @@
  *
  * Dependency-free ES module. No DOM, no I/O, no globals, no mutation of the
  * inputs: routeSystem() reads only its arguments and returns plain data, so
- * the same inputs always give the same output. The caller just re-runs it on
- * every drag and the pipes reflow automatically when parts move.
+ * the same inputs always give the same output and pipes reflow when parts move.
  *
- * MODEL — "trunk + risers"
- *   The plumbing is one horizontal TRUNK line at y = pipeY, with vertical
- *   RISERS dropping from each part's ports down to the trunk:
+ * MODEL — "main line with branches", flowing RIGHT to LEFT
+ *   Source is on the right; treated water exits on the left. A single MAIN LINE
+ *   runs horizontally at y = options.pipeY. Each part connects to it by one of
+ *   four styles, chosen from its ports' `dir` and `tap`:
  *
- *        [ tank ]                 [ filter ]
- *      inlet|   |outlet        inlet|   |outlet
- *           |   |                   |   | drain
- *      -----+---+-------------------+---+----------   <- trunk at pipeY
- *                                       |  (tee)
- *                                       |               drain continues below
- *                                       +-----> outlet  the trunk
+ *   (a) INLINE part — a valve/gauge with exactly an inlet + outlet, both
+ *       tap:"inline" and dir left/right. The part sits ON the line; its two
+ *       ports are line nodes and the artwork bridges the body, so the main line
+ *       is drawn up TO each port but NOT across the interior (no fittings).
  *
- *   1. Parts are sorted left-to-right by x.
- *   2. Each port is converted from local coords to absolute canvas coords
- *      (part.x + port.x, part.y + port.y).
- *   3. The trunk runs from the first part's inlet to the last part's outlet
- *      (widened if needed so every riser actually lands on it).
- *   4. Every "down" port drops a vertical riser to the trunk and records a
- *      fitting where it lands: "elbow" for inlet/outlet, "tee" for drain.
- *   5. Ports that point "left"/"right" (inline fittings, gauges, the source)
- *      sit ON the trunk and get no riser.
- *   6. A drain continues past the trunk: down to pipeY + DRAIN_DROP, an elbow,
- *      a short horizontal stub, ending in a "drain" outlet marker (for an
- *      arrow/label downstream).
+ *          ...====[ valve ]====...        (gap across the body)
+ *
+ *   (b) TEE part — any port with tap:"tee". A vertical branch drops from the
+ *       port to the main line with a "tee" fitting where they meet; the main
+ *       line passes straight through.
+ *
+ *   (c) UP/DOWN FLOW-THROUGH — an inline port with dir up/down (e.g. a contact
+ *       tank: bottom inlet, top outlet). A bottom port connects to the line
+ *       with a vertical + "elbow". A top port runs up-and-over: elbow, a
+ *       horizontal at the port's own y clear of the part, elbow, a vertical
+ *       drop to the line, elbow — like CWS diagrams where treated water exits
+ *       over the top. The main line is diverted (gapped) across the part.
+ *
+ *          out ___________
+ *             |           |               (top outlet, up-and-over)
+ *          [ tank ]       |
+ *          in |           |
+ *      -------+     ...----+-------        main line at pipeY
+ *
+ *   (d) DRAIN — from the drain port, down through the line (tee) to
+ *       pipeY + DRAIN_DROP, elbow, a short horizontal stub away from the
+ *       system, ending in a "drain" marker fitting.
  *
  * OUTPUT — { segments, fittings }
- *   segments: [{ x1, y1, x2, y2 }]   every segment is axis-aligned (H or V).
+ *   segments: [{ x1, y1, x2, y2 }]   every segment is axis-aligned (H or V);
+ *                                    the main-line segments come first.
  *   fittings: [{ x, y, type }]       type: "elbow" | "tee" | "drain".
- *                                    "elbow"/"tee" are trunk joints; "drain"
- *                                    marks the terminal drain outlet.
  */
 
-// Drain geometry (pixels, in canvas scale): how far the drain line continues
-// below the trunk, and the length of the horizontal stub at its outlet.
-const DRAIN_DROP = 70;
-const DRAIN_STUB = 40;
+const DRAIN_DROP = 70;   // how far a drain line continues below the main line
+const DRAIN_STUB = 40;   // length of the horizontal stub at a drain outlet
+const OVER_MARGIN = 24;  // how far past a part's edge an up-and-over clears it
 
-// Ports are visited in this order so the output is deterministic regardless of
-// key order in the manifest. Unknown names sort after these, alphabetically.
 const PORT_ORDER = ['inlet', 'outlet', 'drain'];
+const r = Math.round;
 
 function orderedPortNames(ports) {
   return Object.keys(ports).sort((a, b) => {
@@ -57,89 +61,137 @@ function orderedPortNames(ports) {
   });
 }
 
-// Local port coords -> absolute canvas coords. Returns null if the port is
-// absent so callers can skip missing inlets/outlets safely.
-function absPort(part, name) {
-  const p = part.ports && part.ports[name];
-  if (!p) return null;
-  return { x: part.x + p.x, y: part.y + p.y, dir: p.dir };
+// Local port coords -> absolute coords, with tap defaulted to "inline".
+function absPorts(part) {
+  const out = {};
+  const src = part.ports || {};
+  for (const name in src) {
+    const p = src[name];
+    out[name] = { x: part.x + p.x, y: part.y + p.y, dir: p.dir, tap: p.tap || 'inline' };
+  }
+  return out;
 }
+
+// A "pure inline part": exactly inlet + outlet, both inline and dir left/right.
+function isInline(ports) {
+  const names = Object.keys(ports);
+  if (names.length !== 2 || !ports.inlet || !ports.outlet) return false;
+  return ['inlet', 'outlet'].every(n =>
+    ports[n].tap === 'inline' && (ports[n].dir === 'left' || ports[n].dir === 'right'));
+}
+
+const vseg = (x, ya, yb) => ({ x1: r(x), y1: r(ya), x2: r(x), y2: r(yb) });
+const hseg = (xa, xb, y) => ({ x1: r(xa), y1: r(y), x2: r(xb), y2: r(y) });
+const fit  = (x, y, type) => ({ x: r(x), y: r(y), type });
 
 /**
  * Compute the piping layout for a set of positioned parts.
  * @param {Array<{id,x,y,w,h,ports}>} placedParts  parts already placed on the
  *        canvas (x,y = top-left; ports are local coords from library.json).
- * @param {{pipeY:number}} options  pipeY = y of the horizontal trunk line.
+ * @param {{pipeY:number}} options  pipeY = y of the horizontal main line.
  * @returns {{segments:Array, fittings:Array}}
  */
 export function routeSystem(placedParts, options = {}) {
-  const segments = [];
+  const branches = [];   // non-main-line segments (risers, up-and-over, drains)
   const fittings = [];
   const { pipeY } = options;
 
   if (!placedParts || placedParts.length === 0) {
-    return { segments, fittings };
+    return { segments: [], fittings };
   }
 
-  // 1. Sort left-to-right. Tiebreak on id so the output is fully deterministic.
+  // Flow order is right-to-left, but geometry is symmetric; sort by x with an
+  // id tiebreak so the output is fully deterministic.
   const parts = placedParts
     .slice()
     .sort((a, b) => a.x - b.x || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 
-  // 2 + 4 + 6. Walk every port. "down" ports get risers/fittings; horizontal
-  // ports just touch the trunk. touchX collects every x where pipe meets the
-  // trunk so we can guarantee the trunk spans all of them.
-  const touchX = [];
+  const nodes = [];   // x positions where pipe touches the main line
+  const gaps = [];    // [xa,xb] intervals where the main line must NOT be drawn
+
   for (const part of parts) {
-    if (!part.ports) continue;
-    for (const name of orderedPortNames(part.ports)) {
-      const ap = absPort(part, name);
-      if (!ap) continue;
+    const ports = absPorts(part);
+    if (Object.keys(ports).length === 0) continue;
 
-      if (ap.dir === 'down') {
-        // Vertical riser from the port down to the trunk.
-        segments.push({ x1: ap.x, y1: ap.y, x2: ap.x, y2: pipeY });
-        touchX.push(ap.x);
+    // (a) pure inline part: two side ports on the line, artwork bridges the body
+    if (isInline(ports)) {
+      const lo = Math.min(ports.inlet.x, ports.outlet.x);
+      const hi = Math.max(ports.inlet.x, ports.outlet.x);
+      nodes.push(lo, hi);
+      gaps.push([lo, hi]);
+      continue;
+    }
 
-        if (name === 'drain') {
-          // Tee where the drain crosses the trunk, then continue below it:
-          // down a bit, elbow, a short stub, ending in a drain outlet marker.
-          fittings.push({ x: ap.x, y: pipeY, type: 'tee' });
-          const dy = pipeY + DRAIN_DROP;
-          segments.push({ x1: ap.x, y1: pipeY, x2: ap.x, y2: dy });
-          fittings.push({ x: ap.x, y: dy, type: 'elbow' });
-          segments.push({ x1: ap.x, y1: dy, x2: ap.x + DRAIN_STUB, y2: dy });
-          fittings.push({ x: ap.x + DRAIN_STUB, y: dy, type: 'drain' });
+    const flowNodes = [];  // up/down flow-through nodes (for the divert gap)
+    const partNodes = [];
+    for (const name of orderedPortNames(ports)) {
+      const p = ports[name];
+
+      if (name === 'drain') {
+        // (d) drain: down through the line (tee) to pipeY+DROP, elbow, stub, marker
+        branches.push(vseg(p.x, p.y, pipeY));
+        fittings.push(fit(p.x, pipeY, 'tee'));
+        const dy = pipeY + DRAIN_DROP;
+        branches.push(vseg(p.x, pipeY, dy));
+        fittings.push(fit(p.x, dy, 'elbow'));
+        branches.push(hseg(p.x, p.x + DRAIN_STUB, dy));
+        fittings.push(fit(p.x + DRAIN_STUB, dy, 'drain'));
+        nodes.push(p.x); partNodes.push(p.x);
+
+      } else if (p.tap === 'tee') {
+        // (b) tee branch straight to the main line
+        branches.push(vseg(p.x, p.y, pipeY));
+        fittings.push(fit(p.x, pipeY, 'tee'));
+        nodes.push(p.x); partNodes.push(p.x);
+
+      } else if (p.dir === 'up' || p.dir === 'down') {
+        // (c) up/down flow-through
+        const topHalf = p.y < part.y + part.h / 2;
+        if (topHalf) {
+          // up-and-over: clear the part on the outgoing (outlet=left) or
+          // incoming (inlet=right) side, then drop to the line
+          const overX = name === 'inlet'
+            ? part.x + part.w + OVER_MARGIN
+            : part.x - OVER_MARGIN;
+          fittings.push(fit(p.x, p.y, 'elbow'));
+          branches.push(hseg(p.x, overX, p.y));
+          fittings.push(fit(overX, p.y, 'elbow'));
+          branches.push(vseg(overX, p.y, pipeY));
+          fittings.push(fit(overX, pipeY, 'elbow'));
+          nodes.push(overX); partNodes.push(overX); flowNodes.push(overX);
         } else {
-          // inlet / outlet: an elbow onto the trunk.
-          fittings.push({ x: ap.x, y: pipeY, type: 'elbow' });
+          // bottom port: vertical to the line with an elbow where it turns
+          branches.push(vseg(p.x, p.y, pipeY));
+          fittings.push(fit(p.x, pipeY, 'elbow'));
+          nodes.push(p.x); partNodes.push(p.x); flowNodes.push(p.x);
         }
-      } else if (ap.dir === 'left' || ap.dir === 'right') {
-        // 5. Inline fitting / source port — sits on the trunk, no riser.
-        touchX.push(ap.x);
+
+      } else {
+        // lone inline side port (e.g. a source outlet dir left) — sits on line
+        nodes.push(p.x); partNodes.push(p.x);
       }
-      // "up" ports (none today) route away from the trunk and are ignored.
+    }
+
+    // A flow-through part with both a bottom and a top port diverts the main
+    // line up-and-over between them — gap it so we don't draw straight across.
+    if (flowNodes.length >= 2) {
+      gaps.push([Math.min(...partNodes), Math.max(...partNodes)]);
     }
   }
 
-  // 3. Horizontal trunk at pipeY: first part's inlet -> last part's outlet,
-  //    widened to cover every riser so none dangles off the end.
-  const first = parts[0];
-  const last = parts[parts.length - 1];
-  const startPt = absPort(first, 'inlet') || absPort(first, 'outlet');
-  const endPt = absPort(last, 'outlet') || absPort(last, 'inlet');
-
-  if (touchX.length > 0) {
-    const minX = Math.min(...touchX);
-    const maxX = Math.max(...touchX);
-    const x1 = startPt ? Math.min(startPt.x, minX) : minX;
-    const x2 = endPt ? Math.max(endPt.x, maxX) : maxX;
-    if (x1 !== x2) {
-      // Trunk first so it renders under the risers/fittings.
-      segments.unshift({ x1, y1: pipeY, x2, y2: pipeY });
-    }
+  // Assemble the main line: connect consecutive unique node-x's at pipeY,
+  // skipping any span whose midpoint falls inside a gap (valve body / divert).
+  const uniq = [...new Set(nodes.map(r))].sort((a, b) => a - b);
+  const mains = [];
+  for (let i = 0; i < uniq.length - 1; i++) {
+    const a = uniq[i], b = uniq[i + 1];
+    const mid = (a + b) / 2;
+    const gapped = gaps.some(g => mid >= Math.min(g[0], g[1]) && mid <= Math.max(g[0], g[1]));
+    if (!gapped) mains.push(hseg(a, b, pipeY));
   }
 
+  // Main line first (renders under the branches); drop any zero-length segments.
+  const segments = [...mains, ...branches].filter(s => s.x1 !== s.x2 || s.y1 !== s.y2);
   return { segments, fittings };
 }
 
