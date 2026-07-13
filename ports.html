@@ -1,0 +1,295 @@
+<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CWS Port Editor</title>
+<style>
+ :root{--header:#354C6F;--blue:#0e67b0;--green:#00a57b;--gray:#dad9d9;--bg:#F8F8F8}
+ *{box-sizing:border-box}
+ body{font-family:'Open Sans',system-ui,sans-serif;background:var(--bg);margin:0;color:#334155}
+ header{padding:12px 16px;background:#fff;border-bottom:1px solid var(--gray)}
+ header h1{font-size:18px;color:var(--header);margin:0}
+ header .sub{font-size:12px;color:#64748b;margin-top:2px}
+ #app{display:flex;gap:14px;padding:14px;align-items:flex-start}
+ #list{width:190px;flex:none;background:#fff;border:1px solid var(--gray);border-radius:10px;max-height:82vh;overflow:auto}
+ #list button{display:flex;justify-content:space-between;gap:8px;width:100%;text-align:left;border:none;border-bottom:1px solid #f1f5f9;background:none;padding:8px 10px;font-size:13px;color:var(--header);cursor:pointer}
+ #list button:hover{background:#f1f5f9}
+ #list button.on{background:#eaf2fb;font-weight:700;color:var(--blue)}
+ #list .n{color:#94a3b8;font-weight:400;font-size:11px}
+ main{flex:1;min-width:0}
+ .panel{background:#fff;border:1px solid var(--gray);border-radius:10px;padding:12px;margin-bottom:12px}
+ #title{font-size:15px;font-weight:700;color:var(--header);margin-bottom:8px}
+ #title small{font-weight:400;color:#64748b;font-size:12px;margin-left:6px}
+ canvas{border:1px solid var(--gray);border-radius:8px;background:#f8fafc;touch-action:none;cursor:crosshair;max-width:100%}
+ .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}
+ .row .lab{font-size:12px;font-weight:700;color:#475569;width:66px;flex:none}
+ button.b{border:1px solid var(--gray);background:#fff;border-radius:7px;padding:6px 11px;font-size:13px;font-weight:600;color:var(--header);cursor:pointer}
+ button.b:hover{border-color:var(--blue)}
+ button.b.on{background:var(--header);color:#fff;border-color:var(--header)}
+ button.b.miss{opacity:.55;border-style:dashed}
+ button.b.danger{color:#b91c1c;border-color:#fca5a5}
+ button.b.pri{background:var(--green);color:#fff;border:none}
+ .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+ #readout{font-family:ui-monospace,Consolas,monospace;font-size:12px;background:#0e1c2b;color:#cfe6ff;padding:8px 10px;border-radius:7px;margin-top:8px;white-space:pre-wrap}
+ #status{font-size:12px;color:var(--green);font-weight:700;min-height:16px;margin-top:6px}
+ .hint{font-size:12px;color:#64748b;line-height:1.5}
+ textarea#out{width:100%;height:120px;font-family:ui-monospace,monospace;font-size:11px;margin-top:8px;display:none}
+</style></head><body>
+<header>
+ <h1>CWS Port Editor</h1>
+ <div class="sub">Click a part, pick a port, then click the artwork to set its real connection point. Coordinates are the part's own pixels (0,0 = top-left). Arrow keys nudge 1px (Shift = 10px).</div>
+</header>
+<div id="app">
+ <aside id="list" class="panel" style="padding:0"></aside>
+ <main>
+  <div class="panel">
+   <div id="title">Loading library.json…</div>
+   <canvas id="cv" width="820" height="560"></canvas>
+  </div>
+  <div class="panel">
+   <div class="row"><span class="lab">Port</span><span id="ports"></span></div>
+   <div class="row"><span class="lab">Direction</span>
+     <button class="b" data-dir="left">← left</button>
+     <button class="b" data-dir="right">right →</button>
+     <button class="b" data-dir="up">↑ up</button>
+     <button class="b" data-dir="down">↓ down</button>
+   </div>
+   <div class="row"><span class="lab">Tap</span>
+     <button class="b" data-tap="inline">inline</button>
+     <button class="b" data-tap="tee">tee</button>
+     <span class="hint">inline = pipe passes through/along it · tee = branches off the main line</span>
+   </div>
+   <div class="row"><span class="lab">Edit</span>
+     <button class="b" id="add">+ Add port</button>
+     <button class="b danger" id="del">Delete port</button>
+   </div>
+   <div id="readout"></div>
+  </div>
+  <div class="panel">
+   <div class="row">
+     <button class="b pri" id="copy">Copy updated library.json</button>
+     <button class="b" id="download">Download library.json</button>
+     <span id="status"></span>
+   </div>
+   <div class="hint">Copy/Download emit the complete manifest — everything unchanged except each part's <code>ports</code> (each port carries x, y, dir, tap).</div>
+   <textarea id="out" readonly></textarea>
+  </div>
+ </main>
+</div>
+<script>
+const PORT_NAMES = ['inlet','outlet','drain'];
+const PORT_COLORS = { inlet:'#16a34a', outlet:'#2563eb', drain:'#ea580c' };
+const DIRS = ['left','right','up','down'];
+
+let manifest = null, parts = [], current = -1, selectedPort = 'inlet';
+const images = {};
+let scale = 1, offX = 0, offY = 0;   // display transform, set each draw()
+
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const $ = id => document.getElementById(id);
+
+// ---- load ----
+fetch('library.json')
+  .then(r => r.ok ? r.json() : Promise.reject())
+  .then(m => { manifest = m; parts = m.parts || []; buildList(); if(parts.length) selectPart(0); })
+  .catch(() => { $('title').textContent = 'Could not load library.json — serve the folder first (python3 -m http.server) and open http://localhost:8000/ports.html'; });
+
+function buildList(){
+  const el = $('list'); el.innerHTML = '';
+  parts.forEach((p,i) => {
+    const b = document.createElement('button');
+    const n = p.ports ? Object.keys(p.ports).length : 0;
+    b.innerHTML = `<span>${p.name||p.id}</span><span class="n">${n} port${n===1?'':'s'}</span>`;
+    b.onclick = () => selectPart(i);
+    b.dataset.i = i;
+    el.appendChild(b);
+  });
+}
+
+function selectPart(i){
+  current = i;
+  const part = parts[i];
+  if(!part.ports) part.ports = {};
+  // keep current selected port if it exists, else pick first existing, else inlet
+  if(!part.ports[selectedPort]){
+    const existing = PORT_NAMES.find(n => part.ports[n]);
+    selectedPort = existing || 'inlet';
+  }
+  [...$('list').children].forEach(b => b.classList.toggle('on', +b.dataset.i === i));
+  ensureImg(part);
+  $('title').innerHTML = `${part.name||part.id} <small>${part.id} · ${part.w}×${part.h}px · category: ${part.category||'?'} · mount: ${part.mount||'base'}</small>`;
+  updateToolbar(); draw();
+}
+
+function ensureImg(part){
+  if(images[part.id]) return;
+  const im = new Image();
+  im.onload = draw;
+  im.src = part.file || ('parts/' + part.id + '.png');
+  images[part.id] = im;
+}
+
+// ---- toolbar ----
+function updateToolbar(){
+  const part = parts[current]; if(!part) return;
+  const ports = part.ports;
+  // port buttons (show existence)
+  const pc = $('ports'); pc.innerHTML = '';
+  PORT_NAMES.forEach(name => {
+    const exists = !!ports[name];
+    const b = document.createElement('button');
+    b.className = 'b' + (name===selectedPort?' on':'') + (exists?'':' miss');
+    b.innerHTML = `<span class="dot" style="background:${PORT_COLORS[name]}"></span>${name}${exists?'':' (none)'}`;
+    b.onclick = () => { selectedPort = name; updateToolbar(); draw(); };
+    pc.appendChild(b);
+  });
+  const p = ports[selectedPort];
+  // direction + tap active states
+  document.querySelectorAll('[data-dir]').forEach(b => b.classList.toggle('on', !!p && p.dir===b.dataset.dir));
+  document.querySelectorAll('[data-tap]').forEach(b => b.classList.toggle('on', !!p && (p.tap||'inline')===b.dataset.tap));
+  $('add').style.display = p ? 'none' : '';
+  $('del').style.display = p ? '' : 'none';
+  // readout
+  $('readout').textContent = p
+    ? `${selectedPort}: { x:${Math.round(p.x)}, y:${Math.round(p.y)}, dir:"${p.dir}", tap:"${p.tap||'inline'}" }`
+    : `${selectedPort}: (not set) — click the artwork to place it, or "+ Add port".`;
+}
+
+// ---- editing ----
+function curPort(){ const part = parts[current]; return part && part.ports[selectedPort]; }
+
+function setPortPos(ix, iy){
+  const part = parts[current]; if(!part) return;
+  const p = part.ports[selectedPort] || (part.ports[selectedPort] = { dir: defaultDir(selectedPort), tap:'inline' });
+  p.x = clamp(Math.round(ix), 0, part.w);
+  p.y = clamp(Math.round(iy), 0, part.h);
+  if(!p.tap) p.tap = 'inline';
+  buildList(); updateToolbar(); draw();
+}
+function defaultDir(name){ return name==='drain' ? 'down' : 'down'; }
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+$('add').onclick = () => { const part = parts[current]; if(!part) return;
+  part.ports[selectedPort] = { x:Math.round(part.w/2), y:Math.round(part.h/2), dir:defaultDir(selectedPort), tap:'inline' };
+  buildList(); updateToolbar(); draw(); };
+$('del').onclick = () => { const part = parts[current]; if(!part) return;
+  delete part.ports[selectedPort]; buildList(); updateToolbar(); draw(); };
+document.querySelectorAll('[data-dir]').forEach(b => b.onclick = () => { const p = curPort(); if(p){ p.dir = b.dataset.dir; updateToolbar(); draw(); } });
+document.querySelectorAll('[data-tap]').forEach(b => b.onclick = () => { const p = curPort(); if(p){ p.tap = b.dataset.tap; updateToolbar(); draw(); } });
+
+// ---- canvas click -> image pixel ----
+cv.addEventListener('pointerdown', e => {
+  if(current < 0) return;
+  const r = cv.getBoundingClientRect();
+  const px = (e.clientX - r.left) * (cv.width / r.width);
+  const py = (e.clientY - r.top) * (cv.height / r.height);
+  setPortPos((px - offX)/scale, (py - offY)/scale);
+});
+
+// ---- keyboard nudge ----
+window.addEventListener('keydown', e => {
+  const map = { ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1] };
+  if(!map[e.key]) return;
+  const p = curPort(); if(!p) return;
+  e.preventDefault();
+  const step = e.shiftKey ? 10 : 1;
+  const part = parts[current];
+  p.x = clamp(Math.round(p.x) + map[e.key][0]*step, 0, part.w);
+  p.y = clamp(Math.round(p.y) + map[e.key][1]*step, 0, part.h);
+  updateToolbar(); draw();
+});
+
+// ---- draw ----
+function draw(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.fillStyle = '#f8fafc'; ctx.fillRect(0,0,cv.width,cv.height);
+  const part = parts[current]; if(!part) return;
+  const pad = 40;
+  scale = Math.min((cv.width-2*pad)/part.w, (cv.height-2*pad)/part.h, 4);
+  offX = Math.round((cv.width - part.w*scale)/2);
+  offY = Math.round((cv.height - part.h*scale)/2);
+  const iw = part.w*scale, ih = part.h*scale;
+
+  // light grid in image space (every 20px)
+  ctx.strokeStyle = '#e5e9f0'; ctx.lineWidth = 1;
+  for(let gx=0; gx<=part.w; gx+=20){ const X=offX+gx*scale; ctx.beginPath(); ctx.moveTo(X,offY); ctx.lineTo(X,offY+ih); ctx.stroke(); }
+  for(let gy=0; gy<=part.h; gy+=20){ const Y=offY+gy*scale; ctx.beginPath(); ctx.moveTo(offX,Y); ctx.lineTo(offX+iw,Y); ctx.stroke(); }
+
+  const img = images[part.id];
+  if(img && img.complete && img.naturalWidth) ctx.drawImage(img, offX, offY, iw, ih);
+  ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5; ctx.strokeRect(offX, offY, iw, ih);
+
+  // draw non-selected ports first, selected last (on top); stagger labels so
+  // ports sharing a spot (e.g. inlet/outlet/drain on a tank base) stay legible
+  const names = Object.keys(part.ports);
+  names.sort((a,b) => (a===selectedPort?1:0) - (b===selectedPort?1:0));
+  names.forEach(name => {
+    const rank = PORT_NAMES.indexOf(name); // 0/1/2 -> vertical stagger
+    drawPort(name, part.ports[name], name===selectedPort, rank<0?names.indexOf(name):rank);
+  });
+}
+
+function drawPort(name, p, active, idx){
+  const X = offX + p.x*scale, Y = offY + p.y*scale;
+  const color = PORT_COLORS[name] || '#7c3aed';
+  drawDir(X, Y, p.dir, color);
+  if(active){ ctx.beginPath(); ctx.arc(X,Y,10,0,7); ctx.strokeStyle=color; ctx.lineWidth=2; ctx.stroke(); }
+  ctx.beginPath(); ctx.arc(X,Y,6,0,7); ctx.fillStyle=color; ctx.fill();
+  ctx.lineWidth=2; ctx.strokeStyle='#fff'; ctx.stroke();
+  const txt = `${name} · ${p.dir} · ${p.tap||'inline'}`;
+  ctx.font = '700 12px system-ui,sans-serif';
+  const tw = ctx.measureText(txt).width;
+  let lx = X+12, ly = Y-14 - (idx||0)*16;   // stagger upward by port rank
+  if(lx+tw > cv.width) lx = X-12-tw;
+  if(ly < 14) ly = Y + 22 + (idx||0)*16;    // if no room above, stagger downward
+  ctx.fillStyle = active ? '#fef3c7' : 'rgba(255,255,255,0.9)'; ctx.fillRect(lx-3, ly-12, tw+6, 16);
+  ctx.strokeStyle = color; ctx.lineWidth = active?1.5:0.75; ctx.strokeRect(lx-3, ly-12, tw+6, 16);
+  ctx.fillStyle = '#1f2937'; ctx.fillText(txt, lx, ly);
+}
+
+function drawDir(X, Y, dir, color){
+  const d = { left:[-1,0], right:[1,0], up:[0,-1], down:[0,1] }[dir] || [0,0];
+  const L = 22, ex = X+d[0]*L, ey = Y+d[1]*L, ah = 6;
+  ctx.strokeStyle = color; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(X,Y); ctx.lineTo(ex,ey); ctx.stroke();
+  ctx.fillStyle = color; ctx.beginPath();
+  if(d[0] !== 0){ ctx.moveTo(ex,ey); ctx.lineTo(ex-d[0]*ah, ey-ah); ctx.lineTo(ex-d[0]*ah, ey+ah); }
+  else if(d[1] !== 0){ ctx.moveTo(ex,ey); ctx.lineTo(ex-ah, ey-d[1]*ah); ctx.lineTo(ex+ah, ey-d[1]*ah); }
+  ctx.closePath(); ctx.fill();
+}
+
+// ---- output: full manifest, ports normalized (x,y,dir,tap; int coords) ----
+function outManifest(){
+  const m = JSON.parse(JSON.stringify(manifest));
+  for(const part of m.parts){
+    if(!part.ports) continue;
+    const np = {};
+    const names = [...PORT_NAMES.filter(n => part.ports[n]),
+                   ...Object.keys(part.ports).filter(n => !PORT_NAMES.includes(n))];
+    for(const n of names){ const p = part.ports[n];
+      np[n] = { x:Math.round(p.x), y:Math.round(p.y), dir:p.dir||'down', tap:p.tap||'inline' }; }
+    part.ports = np;
+  }
+  return m;
+}
+function outText(){ return JSON.stringify(outManifest(), null, 2); }
+
+$('copy').onclick = () => {
+  const text = outText();
+  const done = () => { $('status').textContent = 'Copied to clipboard ✓'; setTimeout(()=>$('status').textContent='',2500); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(showTextarea.bind(null,text));
+  } else showTextarea(text);
+};
+function showTextarea(text){
+  const t = $('out'); t.style.display='block'; t.value=text; t.focus(); t.select();
+  $('status').textContent = 'Clipboard blocked — text selected below, press Ctrl+C';
+}
+$('download').onclick = () => {
+  const blob = new Blob([outText()], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'library.json'; a.click();
+  URL.revokeObjectURL(a.href);
+  $('status').textContent = 'Downloaded library.json ✓'; setTimeout(()=>$('status').textContent='',2500);
+};
+</script>
+</body></html>
