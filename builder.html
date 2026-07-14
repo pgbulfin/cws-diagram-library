@@ -178,53 +178,108 @@ const mc = document.createElement("canvas").getContext("2d");
 mc.font = "700 13px 'Open Sans',sans-serif";
 function labelW(t){ return mc.measureText(t).width; }
 
-let system = ["well_head","pressure_tank","metering_pump","contact_tank","gate_valve","hose_bib"];
+// Flow is RIGHT to LEFT: system[0] is the source (well head), rendered rightmost.
+let system = ["well_head","pressure_tank","contact_tank","gate_valve","hose_bib"];
 let over = system.map(()=>null);   // per-slot drag overrides: {cx, top} in SVG units, or null
 let routeSystem = null;            // filled by the dynamic import of router.js
 let lastResolved = [];             // last render's resolved {cx, top} per slot (for drag offset)
-const PIPE_GAP = 24;               // trunk sits this far below the tallest placed part's base
+const TOP_MARGIN = 40;             // clear space above the main line for the tallest part
+const TEE_BRANCH = 40;             // a tee part sits this far above pipeY (its branch length)
+const EXIT_STUB  = 26;             // treated-water-out stub drawn past the leftmost part
+const OVER       = 24;             // must match router.js OVER_MARGIN (up-and-over clearance)
 
+// Pack parts right-to-left in system order (system[0] hugs the right = the source).
 function layout(){
-  let x=24; const out=[];
-  for(const id of system){
-    const p=PARTS[id]; const dw=p.w*K, dh=p.h*K;
-    const slot=Math.max(dw, labelW(p.label)+14);
-    const cx=x+slot/2;
-    out.push({p,cx,dw,dh}); x+=slot+18;
+  const slots=system.map(id=>{ const p=PARTS[id]; const dw=p.w*K, dh=p.h*K;
+    return {p, dw, dh, slot:Math.max(dw, labelW(p.label)+14)}; });
+  const gap=28;
+  const W=slots.reduce((a,s)=>a+s.slot,0)+gap*Math.max(0,slots.length-1)+70;
+  let rightEdge=W-34; const out=[];
+  for(const s of slots){
+    out.push({p:s.p, cx:rightEdge-s.slot/2, dw:s.dw, dh:s.dh});
+    rightEdge-=(s.slot+gap);
   }
-  return {placed:out, W:Math.max(x+10,560)};
+  return {placed:out, W};
 }
 
 function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;");}
 
-// default top-left y for a part (riser parts float above the trunk line)
-function partTop(p,dh){ return p.mount==="riser" ? (BASE-64-dh) : (BASE+4-dh); }
+// Placement category from a part's ports (mirrors the router's routing choice).
+function placeKind(p){
+  const ports=p.ports||{}, names=Object.keys(ports);
+  if(names.some(n=>ports[n].tap==="tee")) return "tee";
+  const lr=names.filter(n=>ports[n].dir==="left"||ports[n].dir==="right");
+  const ud=names.filter(n=>n!=="drain"&&(ports[n].dir==="up"||ports[n].dir==="down"));
+  if(ports.inlet&&ports.outlet&&lr.length>=2&&ud.length===0) return "inline";
+  return "flow";
+}
 
-// resolve each slot's on-canvas position, applying any drag override
-function resolvePlaced(){
+// Desired top-left y so the part's ports sit correctly relative to pipeY:
+// inline -> both ports ON the line; tee -> tee port TEE_BRANCH above; flow -> base on the line.
+function placeTop(p, dh, pipeY){
+  const ports=p.ports||{}, kind=placeKind(p);
+  if(kind==="inline"){
+    const ys=["inlet","outlet"].filter(n=>ports[n]).map(n=>ports[n].y);
+    const anchor=ys.reduce((a,b)=>a+b,0)/ys.length;   // local y of the port row
+    return pipeY - anchor*K;
+  }
+  if(kind==="tee"){
+    const t=Object.keys(ports).find(n=>ports[n].tap==="tee");
+    return (pipeY - TEE_BRANCH) - ports[t].y*K;        // tee port TEE_BRANCH above the line
+  }
+  return pipeY - dh;                                    // flow-through: base on the main line
+}
+
+// Resolve each slot's on-canvas position, applying any drag override.
+function resolvePlaced(pipeY){
   return layout().placed.map((e,i)=>{
     const o=over[i]||{};
     const cx=(o.cx!=null)?o.cx:e.cx;
-    const top=(o.top!=null)?o.top:partTop(e.p,e.dh);
+    const top=(o.top!=null)?o.top:placeTop(e.p,e.dh,pipeY);
     return {p:e.p, dw:e.dw, dh:e.dh, cx, top, idx:i};
   });
 }
 
-// convert a resolved part into router.js input: screen-space box + ports
-// scaled from library.json's original pixel coords by the uniform factor K
+// Convert a resolved part into router.js input: screen-space box + ports scaled
+// from library.json's own pixel coords by K. `tap` is passed through — the router
+// needs it to tell inline parts from tee branches.
 function toRouterPart(e){
   const ports={}, src=e.p.ports||{};
-  for(const name in src){ const pt=src[name]; ports[name]={x:pt.x*K, y:pt.y*K, dir:pt.dir}; }
+  for(const name in src){ const pt=src[name]; ports[name]={x:pt.x*K, y:pt.y*K, dir:pt.dir, tap:pt.tap||"inline"}; }
   return { id:e.p.id, x:e.cx-e.dw/2, y:e.top, w:e.dw, h:e.dh, ports };
 }
 
+// Leftmost point where pipe meets the main line = the treated-water-out end.
+function treatedOutX(rparts){
+  let left=Infinity;
+  for(const rp of rparts){
+    for(const nm in rp.ports){
+      const p=rp.ports[nm];
+      let cx=rp.x+p.x;
+      if((p.dir==="up"||p.dir==="down") && nm!=="drain" && p.tap!=="tee" && p.y<rp.h/2){
+        cx=(nm==="inlet") ? rp.x+rp.w+OVER : rp.x-OVER;   // up-and-over lands here
+      }
+      left=Math.min(left,cx);
+    }
+  }
+  return isFinite(left)?left:null;
+}
+
 // draw routeSystem() output as the CWS "water piping" look
-function pipeMarkup(routed, pipeY){
-  let s="", leftX=Infinity;
-  for(const g of routed.segments){ if(g.y1===pipeY && g.y2===pipeY) leftX=Math.min(leftX,g.x1,g.x2); }
-  // each pipe = outer casing + inner core, rounded caps
+function pipeMarkup(routed, pipeY, leftEnd){
+  let s="";
+  const dbl=(x1,y1,x2,y2)=>
+    `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#64748b" stroke-width="9" stroke-linecap="round"/>`+
+    `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>`;
+  // each pipe = outer casing then inner core (all casings first so junctions read cleanly)
   for(const g of routed.segments) s+=`<line x1="${g.x1}" y1="${g.y1}" x2="${g.x2}" y2="${g.y2}" stroke="#64748b" stroke-width="9" stroke-linecap="round"/>`;
   for(const g of routed.segments) s+=`<line x1="${g.x1}" y1="${g.y1}" x2="${g.x2}" y2="${g.y2}" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>`;
+  // treated-water-out: a short exit stub past the leftmost part + a blue flow arrow
+  if(leftEnd!=null){
+    const x2=leftEnd-EXIT_STUB;
+    s+=dbl(leftEnd,pipeY,x2,pipeY);
+    s+=`<path d="M ${x2-1} ${pipeY} l 11 -6 l 0 12 z" fill="${BLUE}"/>`;
+  }
   // fittings: amber rounded square (tee gets a light center dot); drain gets an arrow + label
   for(const f of routed.fittings){
     if(f.type==="drain"){
@@ -236,35 +291,32 @@ function pipeMarkup(routed, pipeY){
       if(f.type==="tee") s+=`<circle cx="${f.x}" cy="${f.y}" r="2.4" fill="#fde68a"/>`;
     }
   }
-  // flow arrow at the treated-water-out (leftmost) end of the trunk
-  if(isFinite(leftX)){
-    s+=`<line x1="${leftX}" y1="${pipeY}" x2="${leftX-24}" y2="${pipeY}" stroke="${BLUE}" stroke-width="4" stroke-linecap="round"/>`;
-    s+=`<path d="M ${leftX-24} ${pipeY} l 9 -5 l 0 10 z" fill="${BLUE}"/>`;
-  }
   return s;
 }
 
 function render(){
   const svg=document.getElementById("svg");
-  const resolved=resolvePlaced();
+  // pipeY is fixed (parts anchor TO it), derived only from the tallest part height
+  const base=layout().placed;
+  const maxDh=base.length?Math.max(...base.map(e=>e.dh)):200;
+  const pipeY=Math.round(maxDh+TOP_MARGIN);
+  const resolved=resolvePlaced(pipeY);
   lastResolved=resolved.map(e=>({cx:e.cx, top:e.top}));
 
-  // router input in screen coords; trunk sits just below the lowest part base
   const rparts=resolved.map(toRouterPart);
-  const bases=rparts.map(rp=>rp.y+rp.h);
-  const pipeY=(bases.length?Math.max(...bases):BASE)+PIPE_GAP;
   const routed=(routeSystem && rparts.length)? routeSystem(rparts,{pipeY}) : {segments:[],fittings:[]};
+  const leftEnd=routeSystem? treatedOutX(rparts) : null;
 
-  // content bounds -> viewBox (leave room for the left arrow and drain stubs/labels)
-  let minX=0, maxX=560, maxY=330;
-  for(const e of resolved){ maxX=Math.max(maxX, e.cx+e.dw/2, e.cx+labelW(e.p.label)/2); }
-  for(const g of routed.segments){ minX=Math.min(minX,g.x1,g.x2); maxX=Math.max(maxX,g.x1,g.x2); maxY=Math.max(maxY,g.y1,g.y2); }
+  // content bounds -> viewBox (room above for up-and-over, left for the flow arrow)
+  let minX=leftEnd!=null?leftEnd-EXIT_STUB-12:0, maxX=560, minY=0, maxY=330;
+  for(const e of resolved){ maxX=Math.max(maxX, e.cx+e.dw/2, e.cx+labelW(e.p.label)/2); minY=Math.min(minY,e.top); maxY=Math.max(maxY,e.top+e.dh); }
+  for(const g of routed.segments){ minX=Math.min(minX,g.x1,g.x2); maxX=Math.max(maxX,g.x1,g.x2); minY=Math.min(minY,g.y1,g.y2); maxY=Math.max(maxY,g.y1,g.y2); }
   for(const f of routed.fittings){ minX=Math.min(minX,f.x); maxX=Math.max(maxX,f.x+50); maxY=Math.max(maxY,f.y+14); }
-  const VBX=Math.min(minX-30,-10), W=maxX+20, H=Math.max(330,maxY+30);
-  svg.setAttribute("viewBox",`${VBX} 0 ${W-VBX} ${H}`); svg.setAttribute("width","100%");
+  const VBX=minX-16, VBY=Math.min(0,minY)-16, W=maxX+20, H=maxY+30;
+  svg.setAttribute("viewBox",`${VBX} ${VBY} ${W-VBX} ${H-VBY}`); svg.setAttribute("width","100%");
 
   // piping first, so the part images render on top of the pipes
-  let s=routeSystem ? pipeMarkup(routed,pipeY) : "";
+  let s=routeSystem ? pipeMarkup(routed,pipeY,leftEnd) : "";
   for(const e of resolved){
     const {p,cx,dw,dh,top,idx}=e;
     s+=`<g class="pt" data-idx="${idx}">`;
@@ -334,7 +386,7 @@ function buildPalette(){
 // controls
 function mk(t,fn,pri){const b=document.createElement("button");b.textContent=t;if(pri)b.className="pri";b.onclick=fn;return b;}
 const ctr=document.getElementById("controls");
-ctr.appendChild(mk("Load example",()=>{system=["well_head","pressure_tank","metering_pump","contact_tank","gate_valve","hose_bib"].filter(id=>PARTS[id]);over=system.map(()=>null);render();}));
+ctr.appendChild(mk("Load example",()=>{system=["well_head","pressure_tank","contact_tank","gate_valve","hose_bib"].filter(id=>PARTS[id]);over=system.map(()=>null);render();}));
 ctr.appendChild(mk("Clear",()=>{system=[];over=[];render();}));
 ctr.appendChild(mk("Show spec",function(){const p=document.getElementById("spec");const on=p.style.display==="none";p.style.display=on?"block":"none";this.textContent=on?"Hide spec":"Show spec";}));
 ctr.appendChild(mk("Download SVG",dlSVG,true));
